@@ -1,6 +1,32 @@
 import torch
 import torch.nn as nn
 
+class ConvBlock(nn.Module):
+    def __init__(self,in_channels: int = 3, out_channels: int = 3, kernel_size: int = 3)-> None:
+        super().__init__()
+        self.block = nn.Sequential(
+            nn.Conv2d(in_channels,out_channels,kernel_size,padding = "same"),
+            nn.BatchNorm2d(out_channels),
+            nn.LeakyReLU(),
+            nn.MaxPool2d(2,2),
+        )
+       
+    def forward(self,x: torch.Tensor) -> torch.Tensor:
+        return self.block(x)
+
+class Head(nn.Module):
+    def __init__(self,in_channels: int,out_channels: int,n_classes: int,p: float)-> None:
+        super().__init__()
+        self.head = nn.Sequential(
+            nn.Flatten(),
+            nn.Dropout(p=p),
+            nn.Linear(in_channels,out_channels),
+            nn.BatchNorm1d(out_channels),
+            nn.LeakyReLU(),
+            nn.Linear(out_channels,n_classes),
+        )
+    def forward(self,x: torch.Tensor) -> torch.Tensor:
+        return self.head(x)
 
 # define the CNN architecture
 class MyModel(nn.Module):
@@ -13,12 +39,22 @@ class MyModel(nn.Module):
         # to size appropriately the output of your classifier, and if you use
         # the Dropout layer, use the variable "dropout" to indicate how much
         # to use (like nn.Dropout(p=dropout))
+        channels = [3,]+[2**(4+i) for i in range(7)]
+        
+        self.model = nn.Sequential()
+        for i in range(7):
+            self.model.add_module(f"ConvBlock_{i}",
+                                    ConvBlock(channels[i],channels[i+1])
+                                 )
+        
+        self.model.add_module("Head",Head(channels[-1],channels[-2],num_classes,dropout))
+        
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # YOUR CODE HERE: process the input tensor through the
         # feature extractor, the pooling and the final linear
         # layers (if appropriate for the architecture chosen)
-        return x
+        return self.model(x)
 
 
 ######################################################################################

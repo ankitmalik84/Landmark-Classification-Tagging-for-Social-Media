@@ -1,95 +1,203 @@
+# Landmark Classification with Convolutional Neural Networks
+
+Welcome to the Convolutional Neural Networks (CNN) project! In this project, we build a pipeline to process real-world, user-supplied images and create a model to predict the most likely locations where the image was taken. The final app will suggest the top 5 most relevant landmarks from 50 possible landmarks from across the world.
+
 ## Project Overview
 
-Welcome to the Convolutional Neural Networks (CNN) project!
-In this project, you will learn how to build a pipeline to process real-world, user-supplied images and to put your model into an app.
-Given an image, your app will predict the most likely locations where the image was taken.
+Photo sharing and storage services often lack location metadata for uploaded images. This project addresses the challenge by detecting and classifying landmarks in the images using a CNN-powered app.
 
-By completing this lab, you demonstrate your understanding of the challenges involved in piecing together a series of models designed to perform various tasks in a data processing pipeline. 
+### Key Objectives
 
-Each model has its strengths and weaknesses, and engineering a real-world application often involves solving many problems without a perfect answer.
+- Build a CNN from scratch for landmark classification.
+- Experiment with different architectures, hyperparameters, and training strategies.
+- Implement transfer learning using pre-trained models.
+- Develop a simple app to predict landmarks from user-uploaded images.
 
-### Why We're Here
+## Data Preprocessing
 
-Photo sharing and photo storage services like to have location data for each photo that is uploaded. With the location data, these services can build advanced features, such as automatic suggestion of relevant tags or automatic photo organization, which help provide a compelling user experience. Although a photo's location can often be obtained by looking at the photo's metadata, many photos uploaded to these services will not have location metadata available. This can happen when, for example, the camera capturing the picture does not have GPS or if a photo's metadata is scrubbed due to privacy concerns.
+### Procedure
 
-If no location metadata for an image is available, one way to infer the location is to detect and classify a discernable landmark in the image. Given the large number of landmarks across the world and the immense volume of images that are uploaded to photo sharing services, using human judgement to classify these landmarks would not be feasible.
+1. **Resize Images:**
 
-In this project, you will take the first steps towards addressing this problem by building a CNN-powered app to automatically predict the location of the image based on any landmarks depicted in the image. At the end of this project, your app will accept any user-supplied image as input and suggest the top k most relevant landmarks from 50 possible landmarks from across the world.
+   - First resize images to 256x256 pixels.
+   - Then crop images to 224x224 pixels.
+   - Chosen 224x224 as it is the recommended input size for using PyTorch's pre-trained models.
 
+2. **Data Augmentation:**
+   - Applied `RandAugment` to augment the dataset with translations, flips, and rotations.
+   - Aimed to improve model robustness and test accuracy.
 
-## Project Instructions
+## CNN Architecture (From Scratch)
 
-### Getting started
+### Steps to Final Architecture
 
-You have two choices for completing this project. You can work locally on your machine (NVIDIA GPU highly recommended), or you can work in the provided Udacity workspace that you can find in your classroom.
+1. **Initial Setup:**
 
-#### Setting up in the Udacity Project Workspace
-You can find the Udacity Project Workspace in your Udacity classroom, in the Project section.
+   - 7 convolutional blocks to ensure expressiveness.
+   - Dropout layers to reduce overfitting.
+   - Output a 50-dimensional vector to match the 50 landmark classes.
 
-1. Start the workspace by clicking on `Project Workspace` in the left menu in the page
-2. When prompted on whether you want a GPU or not, please ANSWER YES (the GPU is going to make everything several times faster)
+2. **Training Parameters:**
+   - Batch size: 64
+   - Validation size: 20%
+   - Epochs: 50
+   - Learning rate: 0.01
+   - Optimizer: Adam
+   - Weight decay: \(1 \times 10^{-8}\)
 
-The environment is already setup for you, including the starter code, so you can jump right into building the project!
+### Results
 
-#### Setting up locally
+- **Test Loss:** 1.632997
+- **Test Accuracy:** 60% (760/1250)
 
-This setup requires a bit of familiarity with creating a working deep learning environment. While things should work out of the box, in case of problems you might have to do operations on your system (like installing new NVIDIA drivers) that are not covered in the class. Please do this if you are at least a bit familiar with these subjects, otherwise please consider using the provided Udacity workspace that you find in the classroom.
+## Transfer Learning
 
-1. Open a terminal and clone the repository, then navigate to the downloaded folder:
-	
-	```	
-		git clone https://github.com/udacity/cd1821-CNN-project-starter.git
-		cd cd1821-CNN-project-starter
-	```
-    
-2. Create a new conda environment with python 3.7.6:
+### Procedure
 
-    ```
-        conda create --name udacity_cnn_project -y python=3.7.6
-        conda activate udacity_cnn_project
-    ```
-    
-    NOTE: you will have to execute `conda activate udacity_cnn_project` for every new terminal session.
-    
-3. Install the requirements of the project:
+1. **Model Choice:**
 
-    ```
-        pip install -r requirements.txt
-    ```
+   - Used `ResNet152` for transfer learning due to its performance on ImageNet and suitability for natural scene images.
 
-4. Install and open Jupyter lab:
-	
-	```
-        pip install jupyterlab
-		jupyter lab
-	```
+2. **Training Parameters:**
+   - Batch size: 64
+   - Validation size: 20%
+   - Epochs: 50
+   - Learning rate: 0.001
+   - Optimizer: Adam
+   - Weight decay: 0.0
 
-### Developing your project
+### Results
 
-Now that you have a working environment, execute the following steps:
+- **Test Loss:** 0.807198
+- **Test Accuracy:** 79% (998/1250)
 
->**Note:** Complete the following notebooks in order, do not move to the next step if you didn't complete the previous one.
+## Simple App for Landmark Classification
 
-1. Open the `cnn_from_scratch.ipynb` notebook and follow the instructions there
-2. Open `transfer_learning.ipynb` and follow the instructions
-3. Open `app.ipynb` and follow the instructions there
+### Functionality
 
-## Evaluation
+- Upload an image.
+- The app predicts and displays the top 5 landmarks with their probabilities.
 
-Your project will be reviewed by a Udacity reviewer against the CNN project rubric.  Review this rubric thoroughly and self-evaluate your project before submission.  All criteria found in the rubric must meet specifications for you to pass.
+### Code Overview
 
-## Project Submission
+```python
+from ipywidgets import VBox, Button, FileUpload, Output, Label
+from PIL import Image
+from IPython.display import display
+import io
+import numpy as np
+import torchvision.transforms as T
+import torch
 
-Your submission should consist of the github link to your repository.  Your repository should contain:
-- The `landmark.ipynb` file with fully functional code, all code cells executed and displaying output, and all questions answered.
-- An HTML or PDF export of the project notebook with the name `report.html` or `report.pdf`.
+# Load the exported model
+learn_inf = torch.jit.load("checkpoints/transfer_exported.pt")
 
-Please do __NOT__ include any of the project data sets provided in the `landmark_images/` folder.
+def on_click_classify(change):
+    fn = io.BytesIO(btn_upload.data[-1])
+    img = Image.open(fn)
+    img.load()
+    out_pl.clear_output()
+    with out_pl:
+        ratio = img.size[0] / img.size[1]
+        c = img.copy()
+        c.thumbnail([ratio * 200, 200])
+        display(c)
+    timg = T.ToTensor()(img).unsqueeze_(0)
+    softmax = learn_inf(timg).data.cpu().numpy().squeeze()
+    idxs = np.argsort(softmax)[::-1]
+    for i in range(5):
+        p = softmax[idxs[i]]
+        landmark_name = learn_inf.class_names[idxs[i]]
+        labels[i].value = f"{landmark_name} (prob: {p:.2f})"
 
-### Ready to submit your project?
+btn_upload = FileUpload()
+btn_run = Button(description="Classify")
+btn_run.on_click(on_click_classify)
+labels = [Label() for _ in range(5)]
+out_pl = Output()
+out_pl.clear_output()
+wgs = [Label("Please upload a picture of a landmark"), btn_upload, btn_run, out_pl] + labels
+VBox(wgs)
+```
 
-Click on the "Submit Project" button in the classroom and follow the instructions to submit!
+## Model Code
 
-## Dataset Info
+### CNN from Scratch
 
-The landmark images are a subset of the Google Landmarks Dataset v2.
+```python
+import torch
+import torch.nn as nn
+
+class ConvBlock(nn.Module):
+    def __init__(self, in_channels: int, out_channels: int, kernel_size: int):
+        super().__init__()
+        self.block = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, kernel_size, padding="same"),
+            nn.BatchNorm2d(out_channels),
+            nn.LeakyReLU(),
+            nn.MaxPool2d(2, 2)
+        )
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.block(x)
+
+class Head(nn.Module):
+    def __init__(self, in_channels: int, out_channels: int, n_classes: int, p: float):
+        super().__init__()
+        self.head = nn.Sequential(
+            nn.Flatten(),
+            nn.Dropout(p=p),
+            nn.Linear(in_channels, out_channels),
+            nn.BatchNorm1d(out_channels),
+            nn.LeakyReLU(),
+            nn.Linear(out_channels, n_classes)
+        )
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.head(x)
+
+class MyModel(nn.Module):
+    def __init__(self, num_classes: int, dropout: float):
+        super().__init__()
+        channels = [3,] + [2**(4+i) for i in range(7)]
+        self.model = nn.Sequential()
+        for i in range(7):
+            self.model.add_module(f"ConvBlock_{i}", ConvBlock(channels[i], channels[i+1]))
+        self.model.add_module("Head", Head(channels[-1], channels[-2], num_classes, dropout))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.model(x)
+```
+
+### Transfer Learning
+
+```python
+import torch
+import torchvision.models as models
+
+def get_model_transfer_learning(model_name: str):
+    if model_name == "resnet152":
+        model = models.resnet152(pretrained=True)
+        num_ftrs = model.fc.in_features
+        model.fc = torch.nn.Linear(num_ftrs, 50)
+    else:
+        raise ValueError(f"Model {model_name} not supported")
+    return model
+```
+
+## Usage
+
+1. Clone the repository.
+2. Install the necessary dependencies.
+3. Run the Jupyter notebooks to train the models and launch the app.
+
+```bash
+git clone <repository_url>
+cd <repository_name>
+pip install -r requirements.txt
+jupyter notebook
+```
+
+## Conclusion
+
+This project demonstrates the process of building a CNN for landmark classification, utilizing transfer learning for improved accuracy, and developing a simple app to classify landmarks from user-uploaded images. The transfer learning model achieved a test accuracy of 79%, indicating its suitability for the task.
+
+This project provides me solid foundation for further development and application of CNNs in real-world scenarios.
