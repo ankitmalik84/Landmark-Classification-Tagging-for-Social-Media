@@ -78,48 +78,6 @@ Photo sharing and storage services often lack location metadata for uploaded ima
 - Upload an image.
 - The app predicts and displays the top 5 landmarks with their probabilities.
 
-### Code Overview
-
-```python
-from ipywidgets import VBox, Button, FileUpload, Output, Label
-from PIL import Image
-from IPython.display import display
-import io
-import numpy as np
-import torchvision.transforms as T
-import torch
-
-# Load the exported model
-learn_inf = torch.jit.load("checkpoints/transfer_exported.pt")
-
-def on_click_classify(change):
-    fn = io.BytesIO(btn_upload.data[-1])
-    img = Image.open(fn)
-    img.load()
-    out_pl.clear_output()
-    with out_pl:
-        ratio = img.size[0] / img.size[1]
-        c = img.copy()
-        c.thumbnail([ratio * 200, 200])
-        display(c)
-    timg = T.ToTensor()(img).unsqueeze_(0)
-    softmax = learn_inf(timg).data.cpu().numpy().squeeze()
-    idxs = np.argsort(softmax)[::-1]
-    for i in range(5):
-        p = softmax[idxs[i]]
-        landmark_name = learn_inf.class_names[idxs[i]]
-        labels[i].value = f"{landmark_name} (prob: {p:.2f})"
-
-btn_upload = FileUpload()
-btn_run = Button(description="Classify")
-btn_run.on_click(on_click_classify)
-labels = [Label() for _ in range(5)]
-out_pl = Output()
-out_pl.clear_output()
-wgs = [Label("Please upload a picture of a landmark"), btn_upload, btn_run, out_pl] + labels
-VBox(wgs)
-```
-
 ## Model Code
 
 ### CNN from Scratch
