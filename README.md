@@ -1,19 +1,19 @@
-# Landmark Classification with Convolutional Neural Networks
+# Landmark Classification with Convolutional Neural Networks 🗺️🏛️
 
 Welcome to the Convolutional Neural Networks (CNN) project! In this project, we build a pipeline to process real-world, user-supplied images and create a model to predict the most likely locations where the image was taken. The final app will suggest the top 5 most relevant landmarks from 50 possible landmarks from across the world.
 
-## Project Overview
+## Project Overview 🌍
 
 Photo sharing and storage services often lack location metadata for uploaded images. This project addresses the challenge by detecting and classifying landmarks in the images using a CNN-powered app.
 
-### Key Objectives
+### Key Objectives 🎯
 
-- Build a CNN from scratch for landmark classification.
-- Experiment with different architectures, hyperparameters, and training strategies.
-- Implement transfer learning using pre-trained models.
-- Develop a simple app to predict landmarks from user-uploaded images.
+✔️ Build a CNN from scratch for landmark classification.  
+✔️ Experiment with different architectures, hyperparameters, and training strategies.  
+✔️ Implement transfer learning using pre-trained models.  
+✔️ Develop a simple app to predict landmarks from user-uploaded images.
 
-## Data Preprocessing
+## Data Preprocessing 🧹
 
 ### Procedure
 
@@ -27,7 +27,7 @@ Photo sharing and storage services often lack location metadata for uploaded ima
    - Applied `RandAugment` to augment the dataset with translations, flips, and rotations.
    - Aimed to improve model robustness and test accuracy.
 
-## CNN Architecture (From Scratch)
+## 🏗️ CNN Architecture (From Scratch)
 
 ### Steps to Final Architecture
 
@@ -50,7 +50,7 @@ Photo sharing and storage services often lack location metadata for uploaded ima
 - **Test Loss:** 1.632997
 - **Test Accuracy:** 60% (760/1250)
 
-## Transfer Learning
+## 🤖 Transfer Learning
 
 ### Procedure
 
@@ -71,14 +71,14 @@ Photo sharing and storage services often lack location metadata for uploaded ima
 - **Test Loss:** 0.807198
 - **Test Accuracy:** 79% (998/1250)
 
-## Simple App for Landmark Classification
+## Simple App for Landmark Classification 📸
 
 ### Functionality
 
 - Upload an image.
 - The app predicts and displays the top 5 landmarks with their probabilities.
 
-## Model Code
+## Model Code 💻
 
 ### CNN from Scratch
 
@@ -125,7 +125,7 @@ class MyModel(nn.Module):
         return self.model(x)
 ```
 
-### Transfer Learning
+### 🤖 Transfer Learning
 
 ```python
 import torch
@@ -141,7 +141,7 @@ def get_model_transfer_learning(model_name: str):
     return model
 ```
 
-## Usage
+## Usage 🚀
 
 1. Clone the repository.
 2. Install the necessary dependencies.
@@ -154,8 +154,8 @@ pip install -r requirements.txt
 jupyter notebook
 ```
 
-## Conclusion
+## Conclusion 📈
 
 This project demonstrates the process of building a CNN for landmark classification, utilizing transfer learning for improved accuracy, and developing a simple app to classify landmarks from user-uploaded images. The transfer learning model achieved a test accuracy of 79%, indicating its suitability for the task.
 
-This project provides me solid foundation for further development and application of CNNs in real-world scenarios.
+This project provides a solid foundation for further development and application of CNNs in real-world scenarios.
